@@ -18,7 +18,18 @@ CATEGORIAS_ORDEN = ["Líder del Proyecto", "Arquitecto", "Desarrollador", "Anali
 REGEX_TELEFONO = re.compile(r"^\d{10}$")
 REGEX_EMAIL_COPPEL = re.compile(r"^[^@\s]+@coppel\.com$", re.IGNORECASE)
 
-
+with open(JSON_PATH, "r", encoding="utf-8") as f:
+    config = json.load(f)
+    descripcion = config.setdefault("Descripcion", {})
+    nueva_descripcion = "datosescalamiento"
+    if nueva_descripcion in descripcion:
+        pass
+    else:
+        descripcion[nueva_descripcion] = "Aplicacion para obtener la información de personas y equipos."
+        
+        with open(JSON_PATH, "w", encoding="utf-8") as fw:
+            json.dump(config, fw, ensure_ascii=False, indent=2)
+    
 # ---------------------------------------------------------
 # Funciones de datos (JSON)
 # ---------------------------------------------------------
