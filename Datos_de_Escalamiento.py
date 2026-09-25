@@ -8,7 +8,34 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-JSON_PATH = os.path.join(BASE_DIR, "config.json")
+
+
+def encontrar_config(nombre_archivo="config.json"):
+    """Busca config.json en la carpeta del script, en la terminal, 
+    en subcarpetas y hasta 2 niveles hacia arriba (carpetas padre)."""
+    # 1. Carpeta exacta del script y carpeta actual de la terminal
+    rutas_directas = [
+        os.path.join(BASE_DIR, nombre_archivo),
+        os.path.join(os.getcwd(), nombre_archivo),
+        os.path.join(os.path.dirname(BASE_DIR), nombre_archivo),
+        os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), nombre_archivo),
+    ]
+    for ruta in rutas_directas:
+        if os.path.exists(ruta):
+            return os.path.abspath(ruta)
+
+    # 2. Buscar en subcarpetas partiendo del script y de la carpeta padre
+    directorios_busqueda = [BASE_DIR, os.getcwd(), os.path.dirname(BASE_DIR)]
+    for directorio_base in directorios_busqueda:
+        for raiz, directorios, archivos in os.walk(directorio_base):
+            if nombre_archivo in archivos:
+                return os.path.abspath(os.path.join(raiz, nombre_archivo))
+
+    # Si no existe en ningún lado, devuelve la ruta junto al script para el aviso
+    return os.path.join(BASE_DIR, nombre_archivo)
+
+
+JSON_PATH = encontrar_config("config.json")
 
 ALIAS_PUESTO = ["puesto", "cargo", "rol", "posicion", "posición"]
 
@@ -23,60 +50,36 @@ REGEX_EMAIL_COPPEL = re.compile(r"^[^@\s]+@coppel\.com$", re.IGNORECASE)
 # Funciones de datos (JSON)
 # ---------------------------------------------------------
 def cargar_datos(path):
-
-    
+    """Carga el JSON externo, agrega únicamente la descripción de datosescalamiento 
+    al archivo si no existe y prepara la estructura en memoria para la app."""
     if not os.path.exists(path):
-        print(f"Advertencia: No se encontró el archivo '{path}'. Se usarán valores por defecto en memoria.")
-        return {
-            "personas": [],
-            "equipos": {},
-            "analista_email": None,
-            "Descripcion": {
-                "datosescalamiento": "Aplicacion para obtener la información de personas y equipos."
-            }
-        }
+        mensaje = f"No se encontró el archivo 'config.json' en:\n{path}"
+        print(f"Advertencia: {mensaje}")
+        messagebox.showwarning("Archivo no encontrado", mensaje)
+        return {"personas": [], "equipos": {}, "analista_email": None}
 
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            
-        modificado = False
-        
-        if "Servidores_SQL" in data:
-            data["Servidores_BD"] = data.pop("Servidores_SQL")
-            modificado = True
 
+        # --- Agregar ÚNICAMENTE la descripción al archivo JSON ---
         descripcion = data.setdefault("Descripcion", {})
         nueva_descripcion = "datosescalamiento"
-        
+
         if nueva_descripcion not in descripcion:
             descripcion[nueva_descripcion] = "Aplicacion para obtener la información de personas y equipos."
-            modificado = True
-
-        if "personas" not in data:
-            data["personas"] = []
-            modificado = True
-        if "equipos" not in data:
-            data["equipos"] = {}
-            modificado = True
-        if "analista_email" not in data:
-            data["analista_email"] = None
-            modificado = True
-
-        if modificado:
             with open(path, "w", encoding="utf-8") as fw:
                 json.dump(data, fw, ensure_ascii=False, indent=2)
 
+        # Valores en memoria para que la interfaz funcione sin escribirlos al archivo de inicio
+        data.setdefault("personas", [])
+        data.setdefault("equipos", {})
+        data.setdefault("analista_email", None)
         return data
 
     except Exception as e:
-        messagebox.showerror("Error al cargar JSON", f"No se pudo leer el archivo:\n{e}'{path}'")
-        return {
-            "personas": [], 
-            "equipos": {}, 
-            "analista_email": None,
-            "Descripcion": {}
-        }
+        messagebox.showerror("Error al cargar JSON", f"No se pudo leer el archivo:\n{e}")
+        return {"personas": [], "equipos": {}, "analista_email": None}
 
 
 def guardar_datos(path, data):
