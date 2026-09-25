@@ -442,7 +442,7 @@ class EquipoDialog(ctk.CTkToplevel):
 class DataApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Data APP - Portal Proveedores")
+        self.title("Datos de Escalamiento - Portal Proveedores")
         self.geometry("1050x760")
         self.minsize(900, 640)
 
@@ -478,7 +478,7 @@ class DataApp(ctk.CTk):
         sidebar.grid_rowconfigure(9, weight=1)
 
         ctk.CTkLabel(sidebar, text="📊", font=ctk.CTkFont(size=32)).grid(row=0, column=0, pady=(30, 0))
-        ctk.CTkLabel(sidebar, text="APP", font=ctk.CTkFont(size=22, weight="bold"),
+        ctk.CTkLabel(sidebar, text="Datos de Escalamiento", font=ctk.CTkFont(size=22, weight="bold"),
                      text_color="#3B8ED0").grid(row=1, column=0, pady=(0, 20))
 
         ctk.CTkLabel(sidebar, text="ARCHIVO DE DATOS", font=ctk.CTkFont(size=11, weight="bold"),
