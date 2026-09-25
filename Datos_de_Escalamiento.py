@@ -18,33 +18,65 @@ CATEGORIAS_ORDEN = ["Líder del Proyecto", "Arquitecto", "Desarrollador", "Anali
 REGEX_TELEFONO = re.compile(r"^\d{10}$")
 REGEX_EMAIL_COPPEL = re.compile(r"^[^@\s]+@coppel\.com$", re.IGNORECASE)
 
-with open(JSON_PATH, "r", encoding="utf-8") as f:
-    config = json.load(f)
-    descripcion = config.setdefault("Descripcion", {})
-    nueva_descripcion = "datosescalamiento"
-    if nueva_descripcion in descripcion:
-        pass
-    else:
-        descripcion[nueva_descripcion] = "Aplicacion para obtener la información de personas y equipos."
-        
-        with open(JSON_PATH, "w", encoding="utf-8") as fw:
-            json.dump(config, fw, ensure_ascii=False, indent=2)
-    
+
 # ---------------------------------------------------------
 # Funciones de datos (JSON)
 # ---------------------------------------------------------
 def cargar_datos(path):
-    """Carga el JSON externo. Devuelve dict con 'personas', 'equipos' y 'analista_email'."""
+
+    
+    if not os.path.exists(path):
+        print(f"Advertencia: No se encontró el archivo '{path}'. Se usarán valores por defecto en memoria.")
+        return {
+            "personas": [],
+            "equipos": {},
+            "analista_email": None,
+            "Descripcion": {
+                "datosescalamiento": "Aplicacion para obtener la información de personas y equipos."
+            }
+        }
+
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        data.setdefault("personas", [])
-        data.setdefault("equipos", {})
-        data.setdefault("analista_email", None)
+            
+        modificado = False
+        
+        if "Servidores_SQL" in data:
+            data["Servidores_BD"] = data.pop("Servidores_SQL")
+            modificado = True
+
+        descripcion = data.setdefault("Descripcion", {})
+        nueva_descripcion = "datosescalamiento"
+        
+        if nueva_descripcion not in descripcion:
+            descripcion[nueva_descripcion] = "Aplicacion para obtener la información de personas y equipos."
+            modificado = True
+
+        if "personas" not in data:
+            data["personas"] = []
+            modificado = True
+        if "equipos" not in data:
+            data["equipos"] = {}
+            modificado = True
+        if "analista_email" not in data:
+            data["analista_email"] = None
+            modificado = True
+
+        if modificado:
+            with open(path, "w", encoding="utf-8") as fw:
+                json.dump(data, fw, ensure_ascii=False, indent=2)
+
         return data
+
     except Exception as e:
-        messagebox.showerror("Error al cargar JSON", f"No se pudo leer el archivo:\n{e}")
-        return {"personas": [], "equipos": {}, "analista_email": None}
+        messagebox.showerror("Error al cargar JSON", f"No se pudo leer el archivo:\n{e}'{path}'")
+        return {
+            "personas": [], 
+            "equipos": {}, 
+            "analista_email": None,
+            "Descripcion": {}
+        }
 
 
 def guardar_datos(path, data):
